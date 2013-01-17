@@ -1,0 +1,29 @@
+{% load url from future %}
+
+<html>
+<head><title>Send Bitcoins, get Ripple IOUs</title></head>
+<body>
+<h1>Send Bitcoins, get Ripple IOUs</h1>
+
+{% if message %}<p><strong>{{ message }}</strong></p><hr/>{% endif %}
+
+
+{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+
+<strong>Enter your Ripple address below.</strong>
+
+<form action="{% url 'nexus:bcin' %}" method="post">
+{% csrf_token %}
+<input type="textbox" name="ripple_address" id="ripple_address" value="" />
+<input type="submit" value="Submit" />
+</form>
+
+<p>Note: In order to receive IOUs from me, you need to trust me on Ripple first, to at least 
+the amount of Bitcoins you intend to send me. 
+<a href="https://ripple.com//trust&to=rsWMoLZhRqTGsmztMRyv5UrE28bTbn8gAH&amnt=1btc" target="_blank">Click here</a>
+to trust me on Ripple.</p>
+
+Alternatively, you can <strong><a href="{% url 'redeem' %}">Send Ripple IOUs to get Bitcoins</a></strong>.
+
+</body>
+</html>

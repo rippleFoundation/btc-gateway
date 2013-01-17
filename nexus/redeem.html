@@ -1,0 +1,24 @@
+{% load url from future %}
+
+<html>
+<head><title>Send Ripple IOUs, get Bitcoins</title></head>
+<body>
+<h1>Send Ripple IOUs, get Bitcoins</h1>
+
+{% if message %}<p><strong>{{ message }}</strong></p><hr/>{% endif %}
+
+
+{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+
+<strong>Enter your Bitcoin receiving address below.</strong>
+
+<form action="{% url 'nexus:bcout' %}" method="post">
+{% csrf_token %}
+<input type="textbox" name="bitcoin_address" id="bitcoin_address" value="" />
+<input type="submit" value="Submit" />
+</form>
+
+Alternatively, you can <strong><a href="{% url 'index' %}">Send Bitcoins, get Ripple IOUs</a></strong>.
+
+</body>
+</html>

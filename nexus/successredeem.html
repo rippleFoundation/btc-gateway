@@ -1,0 +1,20 @@
+<html>
+<head><title>Insert title here</title></head>
+<body>
+<h1>Success!</h1>
+
+
+<p>Your submission has been recorded! Please send your Ripple IOUs to the following Ripple address:</p>
+
+<h2>{{ ripple_address }}?d={{ id }}</h2>
+
+<p>(Be sure to include the "?d={{ id }}" part when you enter the address!)</p>
+
+<p>Once you've sent the IOUs, you will receive an equivalent number of Bitcoins at the Bitcoin address you entered:</p>
+
+<h2>{{ bitcoin_address }}</h2>
+
+<a href="{% url index %}">Back to home</a>
+
+</body>
+</html>
