@@ -2,19 +2,20 @@ import time
 import json
 
 from nexus import models
+import config
 
 from jsonrpc import ServiceProxy, JSONRPCException #Use this to communicate with the locally-running bitcoind instance.
 from ws4py.client.threadedclient import WebSocketClient		
 
-rpcuser="bitcoinrpc"
-rpcpassword="218qBhMbD6HK5hJJ2Kmgk3GbJ7DUrnZy5oNmZeJgjFSn"
-
-RIPPLE_WEBSOCKET_URL = 'wss://s1.ripple.com:51233'
-MY_RIPPLE_ADDRESS = 'rsWMoLZhRqTGsmztMRyv5UrE28bTbn8gAH'
-MY_SECRET_KEY = 'ssoLaaRpFGZgnj5QoE95yuqbLXcMb'
+rpcuser=config.rpcuser
+rpcpassword=config.rpcpassword
+RIPPLE_WEBSOCKET_URL=config.RIPPLE_WEBSOCKET_URL
+MY_RIPPLE_ADDRESS=config.MY_RIPPLE_ADDRESS
+MY_SECRET_KEY=config.MY_SECRET_KEY
 
 
 ## INTERACTING WITH BITCOIN
+
 bitcoin_connection = ServiceProxy("http://" + rpcuser + ":" + rpcpassword + "@127.0.0.1:8332")
 
 def validate_bitcoin_address(address):
@@ -161,7 +162,6 @@ def mark_as_done(ripple_address):
 def listen():
 	ws = IouClientConnector(RIPPLE_WEBSOCKET_URL, protocols=['http-only', 'chat'])
 	ws.connect()
-	#test(ws)
 	while True:
 		time.sleep(20)
 		print "Listening!"
@@ -194,76 +194,3 @@ def listen():
 		except Exception, e:
 			print "An error occurred in traversing btc_out_list:", e
 		print "Finished the loop. Waiting..."
-			
-			
-			
-			
-			
-		
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-		
-			
-#For testing only.
-def test_send_me_ious(ws, dt, amount):
-	print "Trying to send ious for test"
-	request = {
-		'command'   : 'submit',
-		'tx_json'   : {
-			'TransactionType' : 'Payment',
-			'Account' : 'r9JmDFydsvkDK9MtSjxAwYp3NosFWsU62B', #haplesscustomer
-			'Destination' : MY_RIPPLE_ADDRESS,
-			'DestinationTag': dt,
-			'Amount' : {
-				'currency' : 'BTC',
-				'value' : str(amount),
-				'issuer' : MY_RIPPLE_ADDRESS #Myself #'r9JmDFydsvkDK9MtSjxAwYp3NosFWsU62B', #haplesscustomer
-			}
-		},
-		'secret'    : 'sndUDgKtJEZnunYQ7DiKcHToXDDAc', #haplesscustomer
-	}
-	ws.send(json.dumps(request))
-	
-def test_trust_me(ws):
-	request = {
-		'command' : 'submit',
-		'tx_json' : {
-			'TransactionType' : 'TrustSet',
-			'Account'         : "rBQ84VE3TpVymoJ9qaMHkvQQ2H45nLrSS7", #hapless customer 3, is trusting Jeff's Nexus
-			#'Destination'     : MY_RIPPLE_ADDRESS,
-			'LimitAmount'          : {
-				'currency' : 'BTC',
-				'value'    : "9",
-				'issuer'   : MY_RIPPLE_ADDRESS,
-			}
-			
-		},
-		'secret'  : "sh3Va51usg5Qhd4kp4Xjpw2g1qXup",
-	}
-	ws.send(json.dumps(request))
-
-def test_send_them_ious(ws, amount):
-	ws.send_ious_to(amount, "rBQ84VE3TpVymoJ9qaMHkvQQ2H45nLrSS7") #Hapless customer 5
-	
-def test(ws):
-	print "Waiting..."
-	time.sleep(10)
-	test_send_them_ious(ws, 0.012)
-	time.sleep(0.1)
-	test_trust_me(ws)
-
