@@ -1,0 +1,23 @@
+{% load url from future %}
+
+<html>
+<head><title>Send Ripple IOUs, get bitcoins</title></head>
+<body>
+<h1>Send Ripple IOUs, get bitcoins</h1>
+
+{% if message %}<p><strong>{{ message }}</strong></p><hr/>{% endif %}
+
+{% if error_message %}<p><strong style="color:red">{{ error_message }}</strong></p>{% endif %}
+
+<strong>Enter your Bitcoin receiving address below.</strong>
+
+<form action="{% url 'bcout' %}" method="post">
+{% csrf_token %}
+<input type="textbox" name="bitcoin_address" id="bitcoin_address" value="" />
+<input type="submit" value="Submit" />
+</form>
+
+<strong><a href="{% url 'index' %}">Back to Home</a></strong>
+
+</body>
+</html>

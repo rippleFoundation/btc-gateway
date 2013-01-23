@@ -120,6 +120,7 @@ INSTALLED_APPS = (
     'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
+	'pythonnexus'
 )
 
 # A sample logging configuration. The only tangible logging
@@ -150,3 +151,15 @@ LOGGING = {
         },
     }
 }
+
+
+
+
+
+
+#Variables for interacting with Bitcoin and Ripple
+rpcuser="bitcoinrpc" #Can be found in bitcoin.conf, which is located in the same directory as wallet.dat (on Windows, C:\Users\You\AppData\Roaming\Bitcoin)
+rpcpassword="218qBhMbD6HK5hJJ2Kmgk3GbJ7DUrnZy5oNmZeJgjFSn" #Ditto
+RIPPLE_WEBSOCKET_URL = 'wss://s1.ripple.com:51233' #The URL of the Websocket address of the Ripple server you want to use to access the network.
+MY_RIPPLE_ADDRESS = 'r4oM4CpUQAsu77Jb81xMFBWWUeGxpZ9xWp' #The public address of your Ripple account.
+MY_SECRET_KEY = 'snAEtMTwKMJ1539MX2AbWiQKDC4FM' #The secret key for your Ripple account.

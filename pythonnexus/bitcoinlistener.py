@@ -1,17 +1,16 @@
 import time
 import json
 
-from pythonnexus import models
-import config
+from pythonnexus import models, settings
 
 from jsonrpc import ServiceProxy, JSONRPCException #Use this to communicate with the locally-running bitcoind instance.
 from ws4py.client.threadedclient import WebSocketClient #Use this to communicate with the remotely-running rippled instance.
 
-rpcuser=config.rpcuser
-rpcpassword=config.rpcpassword
-RIPPLE_WEBSOCKET_URL=config.RIPPLE_WEBSOCKET_URL
-MY_RIPPLE_ADDRESS=config.MY_RIPPLE_ADDRESS
-MY_SECRET_KEY=config.MY_SECRET_KEY
+rpcuser=settings.rpcuser
+rpcpassword=settings.rpcpassword
+RIPPLE_WEBSOCKET_URL=settings.RIPPLE_WEBSOCKET_URL
+MY_RIPPLE_ADDRESS=settings.MY_RIPPLE_ADDRESS
+MY_SECRET_KEY=settings.MY_SECRET_KEY
 
 
 ## INTERACTING WITH BITCOIN
@@ -56,17 +55,6 @@ class IouClientConnector(WebSocketClient):
 			'accounts'     : [ MY_RIPPLE_ADDRESS ],
 			'username'     : rpcuser,
 			'password'     : rpcpassword,
-		}
-		self.send(json.dumps(request))
-		#Tell the server to reject payments without a destination tag.
-		request = {
-			'command' : 'submit',
-			'tx_json' : {
-				'TransactionType' : 'AccountSet',
-				'Flags'           : 65536,
-				'Account'         : MY_RIPPLE_ADDRESS,
-			},
-			'secret'  : MY_SECRET_KEY,
 		}
 		self.send(json.dumps(request))
 
@@ -171,7 +159,7 @@ def listen():
 	ws = IouClientConnector(RIPPLE_WEBSOCKET_URL, protocols=['http-only', 'chat'])
 	ws.connect()
 	while True:
-		time.sleep(60)
+		time.sleep(60) #Every minute, check for received bitcoins, and attempt to send bitcoins to those who are owed.
 		print "Listening!"
 		btc_in_list = models.BitcoinInEntry.objects.filter(done_yet=False)
 		btc_out_list = models.BitcoinOutEntry.objects.filter(done_yet=False).filter(amount_owed__gt=0)

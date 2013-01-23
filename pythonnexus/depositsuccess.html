@@ -1,0 +1,34 @@
+<html>
+<head><title>Send bitcoins, get Ripple IOUs</title></head>
+<body>
+<h1>Submission successful</h1>
+
+{% if already %}
+<p>This Ripple address has already been submitted. If you haven't already, you can still send bitcoins to the following Bitcoin address:</p>
+{% else %}
+<p>Your submission has been recorded! Please send your Bitcoins to the following Bitcoin address:</p>
+{% endif %}
+
+<h2>{{ bitcoin_address }}</h2>
+
+<p>Once you've sent the bitcoins to the address above, you will receive an equivalent number of IOUs at the Ripple address you entered:</p>
+
+<h2>{{ ripple_address }}</h2>
+
+<h3>Important note: this Bitcoin address is single-use only. You will only receive IOUs for the first payment of bitcoins you make to this address. 
+Any subsequent bitcoin payments will be ignored. 
+{% if already %}
+If you have already sent bitcoins to this address, then you are seeing this page because the Bitcoin transaction has not been confirmed yet.
+DO NOT send any more, until you've received your IOUs.
+{% else %}
+If you would like to purchase more IOUs, enter your Ripple address again to receive another Bitcoin
+address to send to.
+{% endif %}
+</h3>
+
+
+
+<strong><a href="{% url index %}">Back to home</a><strong>
+
+</body>
+</html>

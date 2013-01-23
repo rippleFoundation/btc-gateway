@@ -14,16 +14,12 @@ framework.
 
 """
 import os
-
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "pythonnexus.settings")
 
+#Listen for transactions at the same time that we are serving HTTP requests from users.
 import threading
 import bitcoinlistener
-
-def listen_for_bitcoins():
-	bitcoinlistener.listen()
-
-_thread = threading.Thread(target=listen_for_bitcoins)
+_thread = threading.Thread(target=bitcoinlistener.listen)
 _thread.setDaemon(True)
 _thread.start()
 

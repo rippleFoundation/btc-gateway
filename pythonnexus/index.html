@@ -1,0 +1,17 @@
+{% load url from future %}
+<html>
+<head><title>Easy Bitcoin/Ripple Gateway</title></head>
+<body>
+
+<h1>Easy Bitcoin/Ripple Gateway</h1>
+
+<p>Welcome! With this tool, you can send me Bitcoins in exchange for IOUs on the Ripple network;
+or, in the other direction, send me Ripple IOUs in exchange for bitcoins. Select an option:<p>
+
+<ul>
+  <li><strong><a href="{% url 'deposit' %}">Send bitcoins to get Ripple IOUs</a></strong>.</li>
+  <li><strong><a href="{% url 'redeem' %}">Send Ripple IOUs to get bitcoins</a></strong>.</li>
+</ul>
+
+</body>
+</html>
