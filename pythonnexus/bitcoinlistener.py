@@ -76,7 +76,17 @@ class IouClientConnector(WebSocketClient):
 		print m
 		message = json.loads(str(m))
 		if message["status"] == "error":
-			print "Message: an error occurred."
+			if "error" in message                              \
+			 and message["error"] == "dstActMalformed"         \
+			 and "request" in message                          \
+			 and "tx_json" in message["request"]               \
+			 and "Destination" in message["request"]["tx_json"]:
+				malformed_address = message["request"]["tx_json"]["Destination"]
+				print "Error: Destination address is malformed. We will no longer try to send to this address.",\
+				 "Whoever sent us Bitcoins and asked for IOUs to be sent to this Ripple address is out of luck."
+				mark_as_done(malformed_address)
+			else:
+				print "Error: another kind of error occurred."
 		elif message["status"] == "success":
 			print "The message had a status of success, but we'll wait for the closing of the ledger to figure out what to do."
 		elif message["status"] == "closed":
@@ -91,9 +101,7 @@ class IouClientConnector(WebSocketClient):
 			 and message["transaction"]["Amount"]["currency"] == "BTC":
 				destination = message["transaction"]["Destination"]
 				if destination == MY_RIPPLE_ADDRESS:
-					if "issuer" in message["transaction"]["Amount"] \
-					 and message["transaction"]["Amount"]["issuer"] == MY_RIPPLE_ADDRESS \
-					 and "DestinationTag" in message["transaction"]:
+					if "DestinationTag" in message["transaction"]:
 						#This means that someone just sent us IOUs, and we're supposed to send them bitcoins.
 						amount = message["transaction"]["Amount"]["value"]
 						try:
@@ -107,7 +115,7 @@ class IouClientConnector(WebSocketClient):
 							print "Could not find this DestinationTag in the database. We'll send the IOUs back."
 							self.send_ious_to(amount, message["transaction"]["Account"])
 					else:
-						print "Someone just sent us IOUs, but they were issued by someone else, or lacked a DestinationTag."
+						print "Someone just sent us IOUs, but they lacked a DestinationTag."
 				else: 	
 					print "The ledger just closed on an IOU payment from us to someone else that has succeeded."
 					mark_as_done(destination)
@@ -162,6 +170,8 @@ def mark_as_done(ripple_address):
 def listen():
 	ws = IouClientConnector(RIPPLE_WEBSOCKET_URL, protocols=['http-only', 'chat'])
 	ws.connect()
+	#print "Testing!"
+	#test(ws)
 	while True:
 		time.sleep(20)
 		print "Listening!"
@@ -174,6 +184,7 @@ def listen():
 				print "BCA", bitcoin_address
 				print "RA", ripple_address
 				amount_received = amount_received_at_address(bitcoin_address)
+				amount_received = 0.012345 #For testing only.
 				print "AMOUNT", amount_received
 				if amount_received > 0:
 					ws.send_ious_to(amount_received, ripple_address)
@@ -194,3 +205,36 @@ def listen():
 		except Exception, e:
 			print "An error occurred in traversing btc_out_list:", e
 		print "Finished the loop. Waiting..."
+		
+		
+		
+#For testing only.
+
+	
+def test_trust_me(ws):
+	request = {
+		'command' : 'submit',
+		'tx_json' : {
+			'TransactionType' : 'TrustSet',
+			'Account'         : "rJENEwJWyFve99YNedcxw1zVZKLdQ1w3fS", 
+			#'Destination'     : MY_RIPPLE_ADDRESS,
+			'LimitAmount'          : {
+				'currency' : 'BTC',
+				'value'    : "8",
+				'issuer'   : MY_RIPPLE_ADDRESS,
+			}
+			
+		},
+		'secret'  : "sh6PM1oVNGppr116fqf22pnGjwJnc",
+	}
+	ws.send(json.dumps(request))
+
+def test_send_them_ious(ws, amount):
+	ws.send_ious_to(amount, "rJENEwJWyFve99YNedcxw1zVZKLdQ1w3fS")
+	
+def test(ws):
+	print "Waiting..."
+	time.sleep(10)
+	test_send_them_ious(ws, 0.01002)
+	time.sleep(0.1)
+	test_trust_me(ws)

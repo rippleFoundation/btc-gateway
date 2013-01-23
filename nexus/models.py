@@ -5,7 +5,7 @@ from django.db import models
 class BitcoinInEntry(models.Model):
 	done_yet = models.BooleanField(default=False)
 	bitcoin_address = models.CharField(max_length=34, unique=True)
-	ripple_address = models.CharField(max_length=50)
+	ripple_address = models.CharField(max_length=40)
 
 #When someone gives us a Bitcoin address, and we wait to receive IOUs
 #from them, and then send bitcoins to that address.
