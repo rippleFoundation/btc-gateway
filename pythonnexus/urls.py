@@ -5,17 +5,20 @@ from django.contrib import admin
 admin.autodiscover()
 
 urlpatterns = patterns('',
-    # Examples:
-    url(r'^$', 'nexus.views.index', name='index'),
-	url(r'^redeem/', 'nexus.views.redeem', name='redeem'),
+	# Examples:
+	url(r'^$', 'pythonnexus.views.index', name='index'),
+	url(r'^deposit/', 'pythonnexus.views.deposit', name='deposit'),
+	url(r'^redeem/', 'pythonnexus.views.redeem', name='redeem'),
+    url(r'^bcin/$', 'pythonnexus.views.bcin', name='bcin'),
+	url(r'^bcout/$', 'pythonnexus.views.bcout', name='bcout'),
 	#url(r'^/bcin/$', 'nexus.views.bcin', name='nexus:bcin'),
 	#url(r'^bcin/', 'nexus.views.bcin', name='nexus:bcin'),
 
-    url(r'^', include('nexus.urls', namespace='nexus')),
+	#url(r'^', include('nexus.urls', namespace='nexus')),
 	
-    # Uncomment the admin/doc line below to enable admin documentation:
-    # url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
+	# Uncomment the admin/doc line below to enable admin documentation:
+	# url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
 
-    # Uncomment the next line to enable the admin:
-    url(r'^admin/', include(admin.site.urls)),
+	# Uncomment the next line to enable the admin:
+	url(r'^admin/', include(admin.site.urls)),
 )

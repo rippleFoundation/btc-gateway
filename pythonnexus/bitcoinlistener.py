@@ -1,11 +1,11 @@
 import time
 import json
 
-from nexus import models
+from pythonnexus import models
 import config
 
 from jsonrpc import ServiceProxy, JSONRPCException #Use this to communicate with the locally-running bitcoind instance.
-from ws4py.client.threadedclient import WebSocketClient		
+from ws4py.client.threadedclient import WebSocketClient #Use this to communicate with the remotely-running rippled instance.
 
 rpcuser=config.rpcuser
 rpcpassword=config.rpcpassword
@@ -32,8 +32,7 @@ def generate_bitcoin_address():
 
 def amount_received_at_address(bitcoin_address):
 	amount = bitcoin_connection.getreceivedbyaddress(bitcoin_address)
-	print "Bitcoin address:", bitcoin_address
-	print "Received:", amount
+	print amount, "bitcoins received at", bitcoin_address
 	return amount
 
 def send_bitcoins_to(bitcoin_address, amount):
@@ -51,7 +50,7 @@ class IouClientConnector(WebSocketClient):
 	
 	def opened(self):
 		self.connected = True
-		print "Subscribe to messages about receiving Ripple IOUs."
+		#Subscribe to messages about receiving Ripple IOUs.
 		request = {
 			'command'      : 'subscribe',
 			'accounts'     : [ MY_RIPPLE_ADDRESS ],
@@ -59,7 +58,7 @@ class IouClientConnector(WebSocketClient):
 			'password'     : rpcpassword,
 		}
 		self.send(json.dumps(request))
-		print "Tell the server to reject payments without a destination tag."
+		#Tell the server to reject payments without a destination tag.
 		request = {
 			'command' : 'submit',
 			'tx_json' : {
@@ -72,7 +71,7 @@ class IouClientConnector(WebSocketClient):
 		self.send(json.dumps(request))
 
 	def received_message(self, m):
-		#Process message m, to see if we've received or sent Ripple IOUs.
+		#Process the message, to see if we've received or sent Ripple IOUs, or done something else, and respond accordingly.
 		print m
 		message = json.loads(str(m))
 		if message["status"] == "error":
@@ -112,15 +111,15 @@ class IouClientConnector(WebSocketClient):
 							print "On the next execution of the 'Listening!' loop, we will attempt to send",\
 							 amount, "bitcoins to", entry.bitcoin_address
 						except:
-							print "Could not find this DestinationTag in the database. We'll send the IOUs back."
+							print "Could not find this DestinationTag in the database. We'll send the IOUs back if we can."
 							self.send_ious_to(amount, message["transaction"]["Account"])
 					else:
-						print "Someone just sent us IOUs, but they lacked a DestinationTag."
+						print "Someone just sent us IOUs without a DestinationTag. This should not have been allowed if our account was set up correctly."
 				else: 	
-					print "The ledger just closed on an IOU payment from us to someone else that has succeeded."
+					print "The ledger just closed on a BTC-IOU payment from us to someone else that has succeeded."
 					mark_as_done(destination)
 			else:
-				print "The message received had a status of 'closed', but we don't know what for."
+				print "The ledger just closed on some other transaction that involves us but doesn't require us to do anything."
 		else:
 			print "The message status was not error, success, or closed, and was not recognized as any other kind of transaction."
 	
@@ -159,7 +158,8 @@ def mark_as_done(ripple_address):
 		raise
 	if len(entries) == 0:
 		print "WARNING! Attempting to mark_as_done a ripple_address which exists nowhere among the",\
-		 "BitcoinInEntrys that have not been done_yet. Nothing will happen as a result of this."
+		 "BitcoinInEntrys that have not been done_yet. This may have happened as a result of you",\
+		 "manually sending IOUs to someone apart from the web interface. No database entries will be changed."
 	else:
 		for entry in entries:
 			entry.done_yet = True
@@ -170,27 +170,22 @@ def mark_as_done(ripple_address):
 def listen():
 	ws = IouClientConnector(RIPPLE_WEBSOCKET_URL, protocols=['http-only', 'chat'])
 	ws.connect()
-	#print "Testing!"
-	#test(ws)
 	while True:
-		time.sleep(20)
+		time.sleep(60)
 		print "Listening!"
 		btc_in_list = models.BitcoinInEntry.objects.filter(done_yet=False)
 		btc_out_list = models.BitcoinOutEntry.objects.filter(done_yet=False).filter(amount_owed__gt=0)
-		try:
+		try: #All the people who've sent us bitcoins, and are waiting for IOUs.
 			for entry in btc_in_list:
 				bitcoin_address = entry.bitcoin_address
 				ripple_address = entry.ripple_address
-				print "BCA", bitcoin_address
-				print "RA", ripple_address
 				amount_received = amount_received_at_address(bitcoin_address)
-				amount_received = 0.012345 #For testing only.
-				print "AMOUNT", amount_received
+				print bitcoin_address, "has received", amount_received, "bitcoins from the owner of ripple address", ripple_address
 				if amount_received > 0:
 					ws.send_ious_to(amount_received, ripple_address)
 		except Exception, e:
 			print "An error occurred in traversing btc_in_list:", e
-		try:
+		try: #All the people who've sent us BTC-IOUs, and are waiting for bitcions.
 			for entry in btc_out_list:
 				bitcoin_address = entry.bitcoin_address
 				amount_owed = entry.amount_owed
@@ -201,40 +196,7 @@ def listen():
 					entry.save()
 					print "Marked bitcoin_address", bitcoin_address, "as done."
 				except Exception, ee:
-					print "send_bitcoins_to failed:", ex, "this will be attempted next time."
+					print "send_bitcoins_to failed:", ex, "(This will be attempted next time.)"
 		except Exception, e:
 			print "An error occurred in traversing btc_out_list:", e
 		print "Finished the loop. Waiting..."
-		
-		
-		
-#For testing only.
-
-	
-def test_trust_me(ws):
-	request = {
-		'command' : 'submit',
-		'tx_json' : {
-			'TransactionType' : 'TrustSet',
-			'Account'         : "rJENEwJWyFve99YNedcxw1zVZKLdQ1w3fS", 
-			#'Destination'     : MY_RIPPLE_ADDRESS,
-			'LimitAmount'          : {
-				'currency' : 'BTC',
-				'value'    : "8",
-				'issuer'   : MY_RIPPLE_ADDRESS,
-			}
-			
-		},
-		'secret'  : "sh6PM1oVNGppr116fqf22pnGjwJnc",
-	}
-	ws.send(json.dumps(request))
-
-def test_send_them_ious(ws, amount):
-	ws.send_ious_to(amount, "rJENEwJWyFve99YNedcxw1zVZKLdQ1w3fS")
-	
-def test(ws):
-	print "Waiting..."
-	time.sleep(10)
-	test_send_them_ious(ws, 0.01002)
-	time.sleep(0.1)
-	test_trust_me(ws)
